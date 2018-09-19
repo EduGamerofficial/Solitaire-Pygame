@@ -11,3 +11,5 @@ Go to this folder in your terminal and run the game with the command
 ```
 python3 solitaire.py
 ```
+# Screenshots
+![screenshot1](https://raw.githubusercontent.com/kallekro/Solitaire-Pygame/master/screenshots/screenshot1.png)
