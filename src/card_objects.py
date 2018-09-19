@@ -4,37 +4,46 @@ from constants import *
 
 class Card(object):
     def __init__(self, textures, suit, val):
-        self.card_tex = textures[0]
-        self.suit_tex = textures[1]
-        self.val_tex  = textures[2]
+        self.card_tex      = textures[0]
+        self.card_back_tex = textures[1]
+        self.suit_tex      = textures[2]
+        self.val_tex       = textures[3]
         self.suit = suit
         self.value = val
         self.revealed = False
 
         # Positions to draw card elements at
         self.top_xy = (5, 5)
+        self.bottom_xy = (5, CARD_DIM[1] - CARD_SMALL_ITEM_SIZE[1] - 5)
         self.top_spacing_x = CARD_DIM[0] - 30
 
     def draw(self, screen, pos):
-        screen.blit(self.card_tex, pos)
         if self.revealed:
+            screen.blit(self.card_tex, pos)
             screen.blit(self.val_tex, (pos[0] + self.top_xy[0], pos[1] + self.top_xy[1]))
             screen.blit(self.suit_tex, (pos[0] + self.top_xy[0] + self.top_spacing_x, pos[1] + self.top_xy[1]))
+            screen.blit(self.suit_tex, (pos[0] + self.bottom_xy[0], pos[1] + self.bottom_xy[1]))
+            screen.blit(self.val_tex, (pos[0] + self.bottom_xy[0] + self.top_spacing_x, pos[1] + self.bottom_xy[1]))
+        else:
+            screen.blit(self.card_back_tex, pos)
 
     def __str__(self):
         return "%d %s" % (self.value, self.suit.lower().capitalize())
 
 class Deck(object):
-    def __init__(self, pos, deal_holder, br_holders, card_tex, suit_textures, value_textures, tex, empty_texture):
+    def __init__(self, pos, deal_holder, br_holders, textures):
         self.position = pos
         self.deal_holder = deal_holder
         self.br_holders = br_holders
-        self.card_tex = card_tex
-        self.suit_textures = suit_textures
-        self.black_value_textures = value_textures[0]
-        self.red_value_textures = value_textures[1]
-        self.texture = tex
-        self.empty_texture = empty_texture
+
+        self.card_tex = textures["card_tex"]
+        self.card_back_tex = textures["card_back_tex"]
+        self.empty_texture = textures["empty_tex"]
+        self.suit_textures = textures["suit_textures"]
+        self.black_value_textures = textures["black_value_textures"]
+        self.red_value_textures = textures["red_value_textures"]
+        self.texture = textures["deck_tex"]
+
         self.cards = []
 
         self.shuffleCards()
@@ -61,7 +70,7 @@ class Deck(object):
                 val_tex = self.red_value_textures[val]
             else:
                 val_tex = self.black_value_textures[val]
-            new_deck.append(Card([self.card_tex, self.suit_textures[suit], val_tex], suit, val))
+            new_deck.append(Card([self.card_tex, self.card_back_tex, self.suit_textures[suit], val_tex], suit, val))
             suit_counter += 1
             if suit_counter > 3:
                 suit_counter = 0

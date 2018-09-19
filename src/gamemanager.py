@@ -9,59 +9,24 @@ class GameManager(object):
         pygame.display.set_caption("Solitaire")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-        # Textures
         self.my_path = "%s/.." % os.path.dirname(os.path.realpath(__file__))
-        self.background_tex = pygame.image.load("%s/img/background.png" % self.my_path)
 
-        card_tex = pygame.image.load("%s/img/card.png" % self.my_path)
-        empty_holder_tex = pygame.image.load("%s/img/empty_holder.png" % self.my_path)
-
-        suit_textures = {
-            "HEARTS"   : pygame.transform.scale(pygame.image.load("%s/img/suits/big_hearts.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            "DIAMONDS" : pygame.transform.scale(pygame.image.load("%s/img/suits/big_diamonds.png" % self.my_path), CARD_SMALL_ITEM_SIZE),
-            "CLUBS"    : pygame.transform.scale(pygame.image.load("%s/img/suits/big_clubs.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            "SPADES"   : pygame.transform.scale(pygame.image.load("%s/img/suits/big_spades.png"   % self.my_path), CARD_SMALL_ITEM_SIZE)
-        }
-
-        black_value_textures = {
-            1:  pygame.transform.scale(pygame.image.load("%s/img/numbers/ace_black.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            2:  pygame.transform.scale(pygame.image.load("%s/img/numbers/two_black.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            3:  pygame.transform.scale(pygame.image.load("%s/img/numbers/three_black.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            4:  pygame.transform.scale(pygame.image.load("%s/img/numbers/four_black.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            5:  pygame.transform.scale(pygame.image.load("%s/img/numbers/five_black.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            6:  pygame.transform.scale(pygame.image.load("%s/img/numbers/six_black.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            7:  pygame.transform.scale(pygame.image.load("%s/img/numbers/seven_black.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            8:  pygame.transform.scale(pygame.image.load("%s/img/numbers/eight_black.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            9:  pygame.transform.scale(pygame.image.load("%s/img/numbers/nine_black.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            10: pygame.transform.scale(pygame.image.load("%s/img/numbers/ten_black.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            11: pygame.transform.scale(pygame.image.load("%s/img/numbers/knight_black.png" % self.my_path), CARD_SMALL_ITEM_SIZE),
-            12: pygame.transform.scale(pygame.image.load("%s/img/numbers/queen_black.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            13: pygame.transform.scale(pygame.image.load("%s/img/numbers/king_black.png"   % self.my_path), CARD_SMALL_ITEM_SIZE)
-        }
-
-        red_value_textures = {
-            1:  pygame.transform.scale(pygame.image.load("%s/img/numbers/ace_red.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            2:  pygame.transform.scale(pygame.image.load("%s/img/numbers/two_red.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            3:  pygame.transform.scale(pygame.image.load("%s/img/numbers/three_red.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            4:  pygame.transform.scale(pygame.image.load("%s/img/numbers/four_red.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            5:  pygame.transform.scale(pygame.image.load("%s/img/numbers/five_red.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            6:  pygame.transform.scale(pygame.image.load("%s/img/numbers/six_red.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            7:  pygame.transform.scale(pygame.image.load("%s/img/numbers/seven_red.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            8:  pygame.transform.scale(pygame.image.load("%s/img/numbers/eight_red.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            9:  pygame.transform.scale(pygame.image.load("%s/img/numbers/nine_red.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
-            10: pygame.transform.scale(pygame.image.load("%s/img/numbers/ten_red.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
-            11: pygame.transform.scale(pygame.image.load("%s/img/numbers/knight_red.png" % self.my_path), CARD_SMALL_ITEM_SIZE),
-            12: pygame.transform.scale(pygame.image.load("%s/img/numbers/queen_red.png"  % self.my_path), CARD_SMALL_ITEM_SIZE),
-            13: pygame.transform.scale(pygame.image.load("%s/img/numbers/king_red.png"   % self.my_path), CARD_SMALL_ITEM_SIZE)
-        }
-
-        deck_tex = card_tex
+        # Textures
+        self.background_tex = None
+        self.restart_tex = None
+        self.restart_highlight_tex = None
+        self.textures = {}
+        self.loadTextures()
 
         # Initialize gameboard
-        self.gameBoard = GameBoard(card_tex, empty_holder_tex, suit_textures, [black_value_textures, red_value_textures], deck_tex)
+        self.gameBoard = GameBoard(self.textures)
 
         # Input
         self.mouse_held = False
+        self.mouse_pos = (0,0)
+
+        # Restart button
+        self.restart_button = pygame.Rect((20, TOPROW_Y), RESTART_BUTTON_SIZE)
 
     def handleInput(self):
         for event in pygame.event.get():
@@ -71,7 +36,8 @@ class GameManager(object):
                 self.handleMouseInput(event)
 
     def handleMouseInput(self, event):
-        self.gameBoard.mouse_pos = pygame.mouse.get_pos()
+        self.mouse_pos = pygame.mouse.get_pos()
+        self.gameBoard.mouse_pos = self.mouse_pos
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.mouse_held: # Left mouse pressed
                 self.mouse_held = True
@@ -79,7 +45,10 @@ class GameManager(object):
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and self.mouse_held: # Left mouse released
                 self.mouse_held = False
-                self.gameBoard.mouseReleased()
+                if self.restart_button.collidepoint(self.mouse_pos):
+                    self.gameBoard.restartGame()
+                else:
+                    self.gameBoard.mouseReleased()
 
     def playGame(self):
         running = True
@@ -90,5 +59,49 @@ class GameManager(object):
 
     def drawGame(self):
         self.screen.blit(self.background_tex, (0,0))
+        if self.restart_button.collidepoint(self.mouse_pos):
+            self.screen.blit(self.restart_highlight_tex, self.restart_button.topleft)
+        else:
+            self.screen.blit(self.restart_tex, self.restart_button.topleft)
         self.gameBoard.drawBoard(self.screen)
         pygame.display.flip()
+
+    def loadTextures(self):
+        self.background_tex = pygame.image.load("%s/img/background.png" % self.my_path)
+        self.restart_tex = pygame.transform.scale(pygame.image.load("%s/img/restart.png" % self.my_path), RESTART_BUTTON_SIZE)
+        self.restart_highlight_tex = pygame.transform.scale(pygame.image.load("%s/img/restart_highlight.png" % self.my_path), RESTART_BUTTON_SIZE)
+
+        self.textures["card_tex"] = pygame.image.load("%s/img/card_textures/card.png" % self.my_path)
+        self.textures["card_back_tex"] = pygame.image.load("%s/img/card_textures/card_back.png" % self.my_path)
+        self.textures["empty_tex"] = pygame.image.load("%s/img/card_textures/empty_holder.png" % self.my_path)
+
+        self.textures["suit_textures"] = {
+            "HEARTS"   : pygame.transform.scale(pygame.image.load("%s/img/suits/big_hearts.png"   % self.my_path), CARD_SMALL_ITEM_SIZE),
+            "DIAMONDS" : pygame.transform.scale(pygame.image.load("%s/img/suits/big_diamonds.png" % self.my_path), CARD_SMALL_ITEM_SIZE),
+            "CLUBS"    : pygame.transform.scale(pygame.image.load("%s/img/suits/big_clubs.png"    % self.my_path), CARD_SMALL_ITEM_SIZE),
+            "SPADES"   : pygame.transform.scale(pygame.image.load("%s/img/suits/big_spades.png"   % self.my_path), CARD_SMALL_ITEM_SIZE)
+        }
+
+
+        # Load number textures
+        black_value_textures = {}
+        red_value_textures = {}
+        numbers_dir = "%s/img/numbers" % self.my_path
+        try:
+            for image_file in os.listdir(numbers_dir):
+                new_tex = pygame.transform.scale(pygame.image.load("%s/%s" % (numbers_dir, image_file)), CARD_SMALL_ITEM_SIZE)
+                filepath_split = image_file.split('_')
+                val = int(filepath_split[0])
+                color = filepath_split[1]
+                if color == 'b':
+                    black_value_textures[val] = new_tex
+                elif color == 'r':
+                    red_value_textures[val] = new_tex
+                else:
+                    raise ValueError
+        except ValueError as err:
+            print("Error loading number textures. %e" % err)
+        self.textures["black_value_textures"] = black_value_textures
+        self.textures["red_value_textures"] = red_value_textures
+
+        self.textures["deck_tex"] = self.textures["card_back_tex"]

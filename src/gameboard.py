@@ -2,8 +2,8 @@ from card_objects import Card, Deck, BottomRowHolder, TopLeftHolder, TopRightHol
 from constants import *
 
 class GameBoard(object):
-    def __init__(self, card_tex, empty_holder_tex, suit_textures, value_textures, deck_tex):
-        self.empty_holder_tex = empty_holder_tex
+    def __init__(self, textures): #card_tex, empty_holder_tex, suit_textures, value_textures, deck_tex):
+        self.empty_holder_tex = textures["empty_tex"]
         self.deck_pos = (BOTTOMROW_XY[0], TOPROW_Y)
 
         self.mouse_pos = (0,0)
@@ -18,7 +18,7 @@ class GameBoard(object):
         # Initialize holders
         self.initializeHolders()
         # Create deck and deal cards
-        self.deck = Deck(self.deck_pos, self.tl_card_holder, self.br_card_holders, card_tex, suit_textures, value_textures, deck_tex, empty_holder_tex)
+        self.deck = Deck(self.deck_pos, self.tl_card_holder, self.br_card_holders, textures)
 
     def mouseClicked(self):
         # Bottom row
@@ -41,8 +41,6 @@ class GameBoard(object):
                 if self.mouse_pos[0] > self.tl_card_holder.position[0] and self.mouse_pos[0] < self.tl_card_holder.position[0] + tl_holder_width\
                    and self.mouse_pos[1] > TOPROW_Y and self.mouse_pos[1] < TOPROW_Y + CARD_DIM[1]:
                    self.tl_card_holder.grabCard(self.mouse_pos, self.mouse_holder)
-
-
 
     def mouseReleased(self):
         if len(self.mouse_holder.cards) == 0:
@@ -86,6 +84,12 @@ class GameBoard(object):
         for holder in self.br_card_holders + self.trr_card_holders:
             holder.cards = []
         self.tl_card_holder.cards = []
+        self.mouse_holder.cards = []
+
+    def restartGame(self):
+        self.resetHolders()
+        self.deck.shuffleCards()
+        self.deck.dealCards()
 
     def drawBoard(self, screen):
         for holder in self.br_card_holders + self.trr_card_holders:
