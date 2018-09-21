@@ -4,6 +4,7 @@ from constants import *
 
 class Card(object):
     def __init__(self, textures, suit, val):
+        self.textures = textures
         self.card_tex      = textures[0]
         self.card_back_tex = textures[1]
         self.suit_tex      = textures[2]
@@ -31,11 +32,13 @@ class Card(object):
         return "%d %s" % (self.value, self.suit.lower().capitalize())
 
 class Deck(object):
-    def __init__(self, pos, deal_holder, br_holders, textures):
+    def __init__(self, pos, deal_holder, br_holders, tr_holders, textures, easy_mode, autowin=False):
         self.position = pos
         self.deal_holder = deal_holder
         self.br_holders = br_holders
-
+        self.tr_holders = tr_holders
+        self.easy_mode = easy_mode
+        self.autowin = autowin
         self.card_tex = textures["card_tex"]
         self.card_back_tex = textures["card_back_tex"]
         self.empty_texture = textures["empty_tex"]
@@ -50,11 +53,14 @@ class Deck(object):
         self.dealCards()
 
     def clicked(self):
+        card_count = 3
+        if self.easy_mode:
+            card_count = 1
         if len(self.cards) > 0:
-            for i in range(min(len(self.cards), 3)):
+            for i in range(min(len(self.cards), card_count)):
                 self.cards[i].revealed = True
                 self.deal_holder.addCard(self.cards[i])
-            self.cards = self.cards[min(len(self.cards), 3):]
+            self.cards = self.cards[min(len(self.cards), card_count):]
         else:
             for i in range(len(self.deal_holder.cards)):
                 self.cards.append(self.deal_holder.cards[i])
@@ -75,6 +81,9 @@ class Deck(object):
             if suit_counter > 3:
                 suit_counter = 0
                 val += 1
+        if self.autowin:
+            self.cards = new_deck
+            return
         self.cards = []
         while len(new_deck) > 0:
             rand_idx = random.randint(0, len(new_deck)-1)
@@ -82,6 +91,16 @@ class Deck(object):
             del new_deck[rand_idx]
 
     def dealCards(self):
+        if self.autowin:
+            counter = 0
+            for card in self.cards:
+                card.revealed = True
+                self.tr_holders[counter].addCard(card)
+                counter += 1
+                if counter > 3:
+                    counter = 0
+            return
+
         for i in range(-1, 6):
             for j in range(6, i, -1):
                 self.br_holders[j].addCard(self.cards[-1])
@@ -101,9 +120,10 @@ class Deck(object):
 
 
 class CardHolder(object):
-    def __init__(self, pos, empty_tex):
+    def __init__(self, pos, empty_tex, easy_mode=False):
         self.position = pos
         self.empty_tex = empty_tex
+        self.easy_mode = easy_mode
         self.cards = []
         self.offset = (0,0)
 
@@ -118,6 +138,9 @@ class CardHolder(object):
             if self.checkSuitAndVal(self.cards, card, lastCard=True):
                 return self
         return None
+
+    def checkSuitAndVal(self, card1, card2):
+        sys.exit("The base class version of this function should not be used.")
 
     def isValidParentCard(self, idx):
         prev_card = self.cards[idx]
@@ -140,8 +163,8 @@ class CardHolder(object):
             self.cards[i].draw(screen, (self.position[0] + self.offset[0]*i, self.position[1] + self.offset[1]*i))
 
 class BottomRowHolder(CardHolder):
-    def __init__(self, pos, empty_tex):
-        CardHolder.__init__(self, pos, empty_tex)
+    def __init__(self, pos, empty_tex, easy_mode):
+        CardHolder.__init__(self, pos, empty_tex, easy_mode)
         self.offset = BOTTOMROWHOLDER_OFFSET
 
     def grabCard(self, mouse_pos, mouse_holder):
@@ -165,10 +188,11 @@ class BottomRowHolder(CardHolder):
                 return True
             card1 = card1[-1]
         # check color of suit
-        if card1.suit in CARD_SUITS[:2] and card2.suit in CARD_SUITS[:2]:
-            return False
-        if card1.suit in CARD_SUITS[2:4] and card2.suit in CARD_SUITS[2:4]:
-            return False
+        if not self.easy_mode:
+            if card1.suit in CARD_SUITS[:2] and card2.suit in CARD_SUITS[:2]:
+                return False
+            if card1.suit in CARD_SUITS[2:4] and card2.suit in CARD_SUITS[2:4]:
+                return False
         # check value
         if card1.value != card2.value+1:
             return False
